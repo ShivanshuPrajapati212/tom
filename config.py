@@ -1,0 +1,4 @@
+MODEL_NAME    = "qwen:8b"
+LOOP_INTERVAL = 0.5
+MAX_CONTEXT   = 16000
+ENABLE_SHELL  = False
