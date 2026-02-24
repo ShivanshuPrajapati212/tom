@@ -1,7 +1,8 @@
-
+import asyncio
+from core.loop import cognition_loop
 
 
 
 if __name__ == "__main__":
-    collect_inputs()
+    asyncio.run(cognition_loop())
 
