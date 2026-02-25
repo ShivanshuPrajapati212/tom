@@ -1,41 +1,53 @@
-import asyncio
+import mlx_whisper
+import numpy as np
 import sounddevice as sd
 import queue
-import vosk
-import json
 
-# Load Vosk model
-model = vosk.Model("speech-model-en")
-q = queue.Queue()
+# Settings
+MODEL = "mlx-community/whisper-large-v3-turbo"
+SAMPLE_RATE = 16000
+CHUNK_DURATION = 1  # Seconds of audio to process at a time
+audio_queue = queue.Queue()
 
-# Callback to put audio chunks into a queue
 def audio_callback(indata, frames, time, status):
+    """This is called by sounddevice for every audio block"""
     if status:
         print(status)
-    q.put(bytes(indata))
+    audio_queue.put(indata.copy())
 
-async def transcribe_stream():
-    rec = vosk.KaldiRecognizer(model, 16000)
-    print("Listening... Press Ctrl+C to stop.")
-
-    while True:
-        # Non-blocking check for audio data
-        if not q.empty():
-            data = q.get()
-            if rec.AcceptWaveform(data):
-                result = json.loads(rec.Result())
-                print("Result:", result.get("text", ""))
-            else:
-                # Partial result while speaking
-                partial = json.loads(rec.PartialResult())
-                print("Partial:", partial.get("partial", ""), end="\r")
-        await asyncio.sleep(0.01)  # tiny async yield
-
-async def main():
+def stream_transcribe():
+    print(f"--- Loading {MODEL} onto M4 GPU ---")
+    
     # Start microphone stream
-    with sd.RawInputStream(samplerate=16000, blocksize = 8000, dtype='int16',
-                           channels=1, callback=audio_callback):
-        await transcribe_stream()
+    with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, callback=audio_callback):
+        print("Listening... (Press Ctrl+C to stop)\n")
+        
+        audio_buffer = np.array([], dtype=np.float32)
+        
+        try:
+            while True:
+                # Get audio from queue
+                while not audio_queue.empty():
+                    data = audio_queue.get()
+                    audio_buffer = np.append(audio_buffer, data)
+
+                # Process if we have enough audio for a chunk
+                if len(audio_buffer) > SAMPLE_RATE * CHUNK_DURATION:
+                    # MLX Whisper transcribes the buffer
+                    result = mlx_whisper.transcribe(
+                        audio_buffer, 
+                        path_or_hf_repo=MODEL,
+                        fp16=True # Uses M4's FP16 acceleration
+                    )
+                    
+                    print(f"Transcript: {result['text'].strip()}")
+                    
+                    # Clear buffer to start fresh for the next chunk
+                    # Or keep a small overlap for better context
+                    audio_buffer = np.array([], dtype=np.float32)
+                    
+        except KeyboardInterrupt:
+            print("\nStopped.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    stream_transcribe()
