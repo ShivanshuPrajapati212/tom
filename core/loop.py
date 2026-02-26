@@ -1,6 +1,7 @@
 import asyncio
-from perception.file_watcher import start_watching, get_file_changes
-from perception.microphone import init_speech_recognition, get_microphone
+from perception.file_watcher import start_watching 
+from perception.microphone import init_speech_recognition
+from perception.combined_input import get_combined_inputs
 from config.config import LOOP_INTERVAL
 
 
@@ -10,14 +11,7 @@ async def cognition_loop():
 
 
     while True:
-    
-        # Perception
-        file_changes = get_file_changes()
-        if file_changes != []:
-            print(file_changes) 
-
-        microphone_input = get_microphone()
-        if microphone_input != "":
-            print(microphone_input)
+        inputs = get_combined_inputs() 
         
+        print(inputs)
         await asyncio.sleep(LOOP_INTERVAL)

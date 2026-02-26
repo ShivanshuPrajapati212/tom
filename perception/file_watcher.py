@@ -15,8 +15,8 @@ class BufferedHandler(FileSystemEventHandler):
         if not event.is_directory:
             # store change in buffer
             file_changes.append({
-                "path": event.src_path,
-                "type": event.event_type
+                "input_type": f"file_{event.event_type}",
+                "path": event.src_path
             })
 
 
@@ -59,7 +59,7 @@ async def example():
             if changes:
                 print("New changes since last check:")
                 for c in changes:
-                    print(f"  {c['type'].upper()}: {c['path']}")
+                    print(f"{c['input_type'].upper()}: {c['path']}")
     except KeyboardInterrupt:
         watcher_task.cancel()
         await watcher_task

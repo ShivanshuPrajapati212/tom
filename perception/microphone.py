@@ -5,10 +5,10 @@ import sounddevice as sd
 import sys
 
 # --- Configuration ---
-MODEL = "mlx-community/whisper-large-v3-turbo"
+MODEL = "mlx-community/whisper-medium-mlx-8bit"
 SAMPLE_RATE = 16000
 GAIN = 20.0
-SILENCE_THRESHOLD = 0.1
+SILENCE_THRESHOLD = 0.2
 SILENCE_DURATION = 0.8
 MIN_SPEECH_DURATION = 0.3
 
@@ -23,9 +23,11 @@ microphone_input = ""
 
 def get_microphone():
     global microphone_input 
-    changes = microphone_input
+    curr_input = microphone_input
     microphone_input = "" # reset buffer
-    return changes
+    if curr_input == "":
+        return []
+    return [{"input_type": "mic_input", "content":curr_input}]
 
 def apply_gain(chunk: np.ndarray) -> np.ndarray:
     return np.clip(chunk * GAIN, -1.0, 1.0)
@@ -50,6 +52,8 @@ async def transcription_worker(transcription_queue: asyncio.Queue):
                     path_or_hf_repo=MODEL,
                     word_timestamps=False,
                     condition_on_previous_text=False,
+                    language="en",
+                    temperature=0.0
                 )
             )
             for segment in result.get("segments", []):
