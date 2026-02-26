@@ -53,7 +53,8 @@ async def transcription_worker(transcription_queue: asyncio.Queue):
                     word_timestamps=False,
                     condition_on_previous_text=False,
                     language="en",
-                    temperature=0.0
+                    temperature=0.0,
+                    task="trascribe"
                 )
             )
             for segment in result.get("segments", []):
