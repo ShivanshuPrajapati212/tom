@@ -1,8 +1,8 @@
 
 # I have to do this .
 while True:
-    collect_inputs()  
-    update_memory()  # im here
+    collect_inputs() # im here 
+    update_memory()  
     update_world_state()
     reason()
     plan()

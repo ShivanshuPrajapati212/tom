@@ -1,53 +1,117 @@
+import asyncio
 import mlx_whisper
 import numpy as np
 import sounddevice as sd
-import queue
+import sys
 
-# Settings
+# --- Configuration ---
 MODEL = "mlx-community/whisper-large-v3-turbo"
 SAMPLE_RATE = 16000
-CHUNK_DURATION = 1  # Seconds of audio to process at a time
-audio_queue = queue.Queue()
+GAIN = 20.0
+SILENCE_THRESHOLD = 0.1
+SILENCE_DURATION = 0.8
+MIN_SPEECH_DURATION = 0.3
 
-def audio_callback(indata, frames, time, status):
-    """This is called by sounddevice for every audio block"""
-    if status:
-        print(status)
-    audio_queue.put(indata.copy())
+HALLUCINATIONS = {
+    "Thank you.", "Thanks for watching.", "Please subscribe.",
+    "Subtitle by", "you", "Thank you for watching.", "Bye.",
+    "Transcription by", "www.zeoranger.co.uk"
+}
 
-def stream_transcribe():
-    print(f"--- Loading {MODEL} onto M4 GPU ---")
-    
-    # Start microphone stream
-    with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, callback=audio_callback):
-        print("Listening... (Press Ctrl+C to stop)\n")
-        
-        audio_buffer = np.array([], dtype=np.float32)
-        
+def apply_gain(chunk: np.ndarray) -> np.ndarray:
+    return np.clip(chunk * GAIN, -1.0, 1.0)
+
+def get_rms(chunk: np.ndarray) -> float:
+    return float(np.sqrt(np.mean(chunk**2)))
+
+async def transcription_worker(transcription_queue: asyncio.Queue):
+    """
+    Single worker that processes transcriptions one at a time.
+    Prevents concurrent Metal GPU access that caused the abort.
+    """
+    loop = asyncio.get_event_loop()
+    while True:
+        audio_buffer = await transcription_queue.get()
+
         try:
-            while True:
-                # Get audio from queue
-                while not audio_queue.empty():
-                    data = audio_queue.get()
-                    audio_buffer = np.append(audio_buffer, data)
+            result = await loop.run_in_executor(
+                None,
+                lambda buf=audio_buffer: mlx_whisper.transcribe(
+                    buf,
+                    path_or_hf_repo=MODEL,
+                    word_timestamps=False,
+                    condition_on_previous_text=False,
+                )
+            )
+            for segment in result.get("segments", []):
+                text = segment.get("text", "").strip()
+                if text and text not in HALLUCINATIONS and len(text) > 2:
+                    print(text, flush=True)
 
-                # Process if we have enough audio for a chunk
-                if len(audio_buffer) > SAMPLE_RATE * CHUNK_DURATION:
-                    # MLX Whisper transcribes the buffer
-                    result = mlx_whisper.transcribe(
-                        audio_buffer, 
-                        path_or_hf_repo=MODEL,
-                        fp16=True # Uses M4's FP16 acceleration
-                    )
-                    
-                    print(f"Transcript: {result['text'].strip()}")
-                    
-                    # Clear buffer to start fresh for the next chunk
-                    # Or keep a small overlap for better context
-                    audio_buffer = np.array([], dtype=np.float32)
-                    
-        except KeyboardInterrupt:
-            print("\nStopped.")
+        except Exception as e:
+            print(f"[transcription error] {e}", file=sys.stderr)
+
+        finally:
+            transcription_queue.task_done()
+
+async def audio_processor(audio_queue: asyncio.Queue, transcription_queue: asyncio.Queue):
+    """Consume mic chunks, detect speech/silence, enqueue for transcription."""
+    speech_buffer = np.array([], dtype=np.float32)
+    silent_chunks = 0
+    speaking = False
+    SILENT_CHUNKS_NEEDED = int(SILENCE_DURATION / 0.05)
+
+    while True:
+        chunk = await audio_queue.get()
+        rms = get_rms(chunk)
+
+        if rms >= SILENCE_THRESHOLD:
+            speaking = True
+            silent_chunks = 0
+            speech_buffer = np.append(speech_buffer, chunk)
+
+        elif speaking:
+            silent_chunks += 1
+            speech_buffer = np.append(speech_buffer, chunk)
+
+            if silent_chunks >= SILENT_CHUNKS_NEEDED:
+                duration = len(speech_buffer) / SAMPLE_RATE
+                if duration >= MIN_SPEECH_DURATION:
+                    # Enqueue for the single worker — no concurrent GPU calls
+                    await transcription_queue.put(speech_buffer.copy())
+
+                speech_buffer = np.array([], dtype=np.float32)
+                speaking = False
+                silent_chunks = 0
+
+async def main():
+    print(f"--- Loading {MODEL} ---")
+
+    audio_queue: asyncio.Queue = asyncio.Queue()
+    transcription_queue: asyncio.Queue = asyncio.Queue()
+    loop = asyncio.get_event_loop()
+
+    def audio_callback(indata, frames, time, status):
+        if status:
+            print(status, file=sys.stderr)
+        chunk = apply_gain(indata[:, 0].copy())
+        loop.call_soon_threadsafe(audio_queue.put_nowait, chunk)
+
+    with sd.InputStream(
+        samplerate=SAMPLE_RATE,
+        channels=1,
+        callback=audio_callback,
+        blocksize=int(SAMPLE_RATE * 0.05),  # 50ms blocks
+    ):
+        print(f"Listening... (Threshold: {SILENCE_THRESHOLD}, Gain: {GAIN}x)")
+
+        await asyncio.gather(
+            audio_processor(audio_queue, transcription_queue),
+            transcription_worker(transcription_queue),  # single GPU worker
+        )
 
 if __name__ == "__main__":
-    stream_transcribe()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nStopped.")
