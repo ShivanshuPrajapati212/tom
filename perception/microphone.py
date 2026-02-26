@@ -18,6 +18,15 @@ HALLUCINATIONS = {
     "Transcription by", "www.zeoranger.co.uk"
 }
 
+microphone_input = ""
+
+
+def get_microphone():
+    global microphone_input 
+    changes = microphone_input
+    microphone_input = "" # reset buffer
+    return changes
+
 def apply_gain(chunk: np.ndarray) -> np.ndarray:
     return np.clip(chunk * GAIN, -1.0, 1.0)
 
@@ -46,7 +55,9 @@ async def transcription_worker(transcription_queue: asyncio.Queue):
             for segment in result.get("segments", []):
                 text = segment.get("text", "").strip()
                 if text and text not in HALLUCINATIONS and len(text) > 2:
-                    print(text, flush=True)
+                    global microphone_input
+                    microphone_input += text + " "
+                    print(microphone_input)
 
         except Exception as e:
             print(f"[transcription error] {e}", file=sys.stderr)
@@ -84,7 +95,7 @@ async def audio_processor(audio_queue: asyncio.Queue, transcription_queue: async
                 speaking = False
                 silent_chunks = 0
 
-async def main():
+async def init_speech_recognition():
     print(f"--- Loading {MODEL} ---")
 
     audio_queue: asyncio.Queue = asyncio.Queue()
@@ -112,6 +123,6 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        asyncio.run(init_speech_recognition())
     except KeyboardInterrupt:
         print("\nStopped.")
