@@ -22,6 +22,9 @@ Return Example JSON: {"intent": "create_goal", "confidence": 0-1, "priority": 0-
 Transcription:""" + transcription
         }]
     )
+    
+    print(json.loads(response['message']['content']))
+
     return json.loads(response['message']['content'])
 
 

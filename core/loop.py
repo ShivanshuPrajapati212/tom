@@ -1,4 +1,6 @@
 import asyncio
+from memory import update_memory
+from memory.sqlite import get_all_rows
 from perception.file_watcher import start_watching 
 from perception.microphone import init_speech_recognition
 from perception.combined_input import get_combined_inputs
@@ -12,6 +14,7 @@ async def cognition_loop():
 
     while True:
         inputs = get_combined_inputs() 
-        
         print(inputs)
+        update_memory.update_memory(inputs)
+        get_all_rows() 
         await asyncio.sleep(LOOP_INTERVAL)
