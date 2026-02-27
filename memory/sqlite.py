@@ -26,7 +26,7 @@ def add_to_db(event_type, summary, importance):
 def get_all_rows():
     cursor.execute("SELECT * FROM events")
     rows = cursor.fetchall()
-    print(rows)
+    return rows
 
 if __name__ == "__main__":
     get_all_rows()

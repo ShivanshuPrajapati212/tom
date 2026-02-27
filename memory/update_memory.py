@@ -1,4 +1,4 @@
-from memory import classifier, sqlite, summarizer
+from memory import classifier, short_term, sqlite, summarizer
 
 
 def update_memory(inputs):
@@ -11,4 +11,7 @@ def update_memory(inputs):
             summarized = summarizer.long_term_summarizer(input["content"]) 
             print("1: ", summarized)
             sqlite.add_to_db(summarized["category"], summarized["summary"], summarized["importance"])
+            if len(short_term.working_memory["recent_events"]) >= 20:
+                short_term.working_memory["recent_events"].pop(0)
+            short_term.working_memory["recent_events"].append(summarized["summary"])
                     
