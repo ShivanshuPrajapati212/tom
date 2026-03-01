@@ -1,4 +1,5 @@
 import asyncio
+from cognition.reason import reason
 from memory import short_term, update_memory
 from memory.sqlite import get_all_rows
 from perception.file_watcher import start_watching 
@@ -15,7 +16,14 @@ async def cognition_loop():
     while True:
         inputs = get_combined_inputs() 
         print("Inputs: ", inputs)
-        update_memory.update_memory(inputs)
+        summary = update_memory.update_memory(inputs)
         print("Short Term: ", short_term.working_memory["recent_events"])
         print("Long Term: ", get_all_rows()) 
+        if summary == "":
+            await asyncio.sleep(LOOP_INTERVAL)
+            continue
+
+        reasoning = reason(summary, short_term.working_memory)
+        print(reasoning)
+
         await asyncio.sleep(LOOP_INTERVAL)
