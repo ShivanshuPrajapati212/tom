@@ -1,5 +1,4 @@
 import json
-from mlx.core import reset_peak_memory
 import ollama
 
 def createStructuredPrompt(prompt, working_memory):
@@ -11,6 +10,9 @@ def createStructuredPrompt(prompt, working_memory):
             output += "- completed: " + step["content"] + "\n"
         if step["status"] == "pending":
             output += "- pending: " + step["content"] + "\n"
+
+    if len(working_memory["current_plan"]["steps"]) == 0:
+        output += "No Steps/Plan Found.\n"
 
     output += "RECENT EVENTS:\n"
     for event in working_memory["recent_events"]:

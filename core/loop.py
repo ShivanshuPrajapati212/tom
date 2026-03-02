@@ -24,6 +24,6 @@ async def cognition_loop():
             continue
 
         reasoning = reason(summary, short_term.working_memory)
-        print(reasoning)
+        print("Reasoning: ", reasoning)
 
         await asyncio.sleep(LOOP_INTERVAL)
