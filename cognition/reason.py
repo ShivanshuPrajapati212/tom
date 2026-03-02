@@ -6,14 +6,14 @@ def createStructuredPrompt(prompt, working_memory):
     output = "CURRENT GOAL:\n"
     output += prompt + "\n"
     output += "PLAN STATUS:\n"
-    for step in working_memory.current_plan.steps:
-        if step.status == "completed":
-            output += "- completed: " + step.content + "\n"
-        if step.status == "pending":
-            output += "- pending: " + step.content + "\n"
+    for step in working_memory["current_plan"]["steps"]:
+        if step["status"] == "completed":
+            output += "- completed: " + step["content"] + "\n"
+        if step["status"] == "pending":
+            output += "- pending: " + step["content"] + "\n"
 
     output += "RECENT EVENTS:\n"
-    for event in working_memory.recent_events:
+    for event in working_memory["recent_events"]:
         output +=  "- " + event + "\n"
 
     output += """QUESTION:
