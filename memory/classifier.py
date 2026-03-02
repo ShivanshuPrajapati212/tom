@@ -7,7 +7,7 @@ def classify_transcription_relevance(transcription):
         format='json',
         messages=[{
             'role': 'user',
-            'content': """Classify this transcription in the given format.
+            'content': """Classify this transcription in the given format. Remove unrelated Task that a computer can't do.
 | Situation          | Priority   |
 | ------------------ | ---------- |
 | Casual talk        | 0.2        |

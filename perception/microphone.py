@@ -8,7 +8,7 @@ import sys
 MODEL = "mlx-community/whisper-medium-mlx-8bit"
 SAMPLE_RATE = 16000
 GAIN = 20.0
-SILENCE_THRESHOLD = 0.2
+SILENCE_THRESHOLD = 0.3
 SILENCE_DURATION = 0.8
 MIN_SPEECH_DURATION = 0.3
 

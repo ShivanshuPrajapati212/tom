@@ -20,12 +20,13 @@ def createStructuredPrompt(prompt, working_memory):
 
     output += """QUESTION:
 What should be the next structured action?
+Give step by step plan to accomplise the goal.
 Respond in the given JSON format.
 
 {
-  "decision_type": "continue_plan/create_plan/create_plan/complete_goal/reflect/idle",
-  "reasoning": "File summary step not completed.",
-  "next_action": "generate_summary",
+  "decision_type": "generate_summary",
+  "reasoning": "File summary step completed.",
+  "steps": ["Read the document", "Generate Summary"],
   "confidence": 0.86
 }"""
 

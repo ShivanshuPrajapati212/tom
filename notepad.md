@@ -5,6 +5,6 @@ while True:
     update_memory()  
     update_world_state()
     reason()    
-    plan()      # im here
+    plan()      # not doing 
     act()
     sleep(very_short_interval)
