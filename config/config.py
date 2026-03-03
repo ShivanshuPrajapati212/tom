@@ -1,4 +1,4 @@
-MODEL_NAME    = "qwen:8b"
+MODEL_NAME    = "qwen:4b"
 LOOP_INTERVAL = 1
 MAX_CONTEXT   = 16000
 ENABLE_SHELL  = False

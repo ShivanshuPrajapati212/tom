@@ -1,10 +1,12 @@
 import json
 import ollama
 
+from config.config import MODEL_NAME
+ 
 
 def action(goal, reasoning):
     response = ollama.chat(
-        model='qwen3:8b',
+        model=MODEL_NAME,
         format='json',
         messages=[{
             'role': 'user',

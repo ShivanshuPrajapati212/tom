@@ -1,5 +1,6 @@
 import json
 import ollama
+from config.config import MODEL_NAME
 
 def createStructuredPrompt(prompt, working_memory):
     output = "CURRENT GOAL:\n"
@@ -35,7 +36,7 @@ Respond in the given JSON format.
 
 def reason(prompt, working_memory):
     response = ollama.chat(
-        model='qwen3:8b',
+        model=MODEL_NAME,
         format='json',
         messages=[{
             'role': 'user',
