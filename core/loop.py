@@ -1,4 +1,5 @@
 import asyncio
+from actions.executor import action
 from cognition.reason import reason
 from memory import short_term, update_memory
 from memory.sqlite import get_all_rows
@@ -25,5 +26,7 @@ async def cognition_loop():
 
         reasoning = reason(summary, short_term.working_memory)
         print("Reasoning: ", reasoning)
+        execution = action(summary, reasoning)
+        print(execution)
 
         await asyncio.sleep(LOOP_INTERVAL)
