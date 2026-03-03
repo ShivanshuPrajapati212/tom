@@ -13,7 +13,7 @@ def action(goal, reasoning):
             
             Respond like below in JSON.
             {{
-                "type": "plain/code",
+                "type": "plain" or "code",
                 "output": "plain text / code to execute in python sandbox"
             }}"""
         }]
