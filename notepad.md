@@ -4,7 +4,7 @@ while True:
     collect_inputs()  
     update_memory()  
     update_world_state()
-    reason()    
+    reason()     
     plan()      # not doing 
-    act()
+    act()       # im here
     sleep(very_short_interval)

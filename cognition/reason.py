@@ -35,7 +35,7 @@ Respond in the given JSON format.
 
 def reason(prompt, working_memory):
     response = ollama.chat(
-        model='gemma2:2b',
+        model='qwen3:8b',
         format='json',
         messages=[{
             'role': 'user',
