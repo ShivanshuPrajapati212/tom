@@ -8,7 +8,7 @@ import sys
 MODEL = "mlx-community/whisper-medium-mlx-8bit"
 SAMPLE_RATE = 16000
 GAIN = 20.0
-SILENCE_THRESHOLD = 0.3
+SILENCE_THRESHOLD = 0.2
 SILENCE_DURATION = 0.8
 MIN_SPEECH_DURATION = 0.3
 
@@ -106,6 +106,23 @@ async def init_speech_recognition():
     audio_queue: asyncio.Queue = asyncio.Queue()
     transcription_queue: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_event_loop()
+
+    try:
+        warmup_audio = np.zeros(int(SAMPLE_RATE * 0.1), dtype=np.float32)
+        await loop.run_in_executor(
+            None,
+            lambda: mlx_whisper.transcribe(
+                warmup_audio,
+                path_or_hf_repo=MODEL,
+                word_timestamps=False,
+                language="en",
+                temperature=0.0,
+                task="transcribe"
+            )
+        )
+        print(f"--- {MODEL} loaded ---")
+    except Exception as e:
+        print(f"[model load error] {e}", file=sys.stderr)
 
     def audio_callback(indata, frames, time, status):
         if status:
