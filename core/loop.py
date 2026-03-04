@@ -19,7 +19,6 @@ async def cognition_loop():
         print("Inputs: ", inputs)
         summary = update_memory.update_memory(inputs)
         print("Short Term: ", short_term.working_memory["recent_events"])
-        print("Long Term: ", get_all_rows()) 
         if summary == "":
             await asyncio.sleep(LOOP_INTERVAL)
             continue
