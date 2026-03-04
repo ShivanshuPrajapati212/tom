@@ -19,7 +19,7 @@ def action(goal, reasoning):
             Respond like below in JSON.
             {{
                 "type": "plain" or "code",
-                "output": "plain text / code to execute in python sandbox"
+                "output": "plain text / plain python code to execute in python sandbox, no formating just code. make sure that the code doesn't take user input"
             }}"""
         }]
     )
@@ -35,12 +35,20 @@ def action(goal, reasoning):
     
     return 
 def run_code(code):
-    namespace = {}
-    buffer = io.StringIO()
-    sys.stdout = buffer
+    try:
+        with open("temp_code", "w") as f:
+            f.write(code)
+            f.close()
 
-    exec(code, namespace)
+        namespace = {}
+        buffer = io.StringIO()
+        sys.stdout = buffer
 
-    sys.stdout = sys.__stdout__
+        exec(code, namespace)
 
-    return buffer.getvalue()
+        sys.stdout = sys.__stdout__
+
+        return buffer.getvalue()
+    except Exception as e:
+        print("Error Running code: ", e)
+        return ""

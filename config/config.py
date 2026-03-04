@@ -1,4 +1,4 @@
-MODEL_NAME    = "gemma2:2b"
+MODEL_NAME    = "qwen3:4b"
 LOOP_INTERVAL = 1
 MAX_CONTEXT   = 16000
 ENABLE_SHELL  = False

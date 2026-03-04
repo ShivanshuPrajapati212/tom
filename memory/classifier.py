@@ -11,10 +11,10 @@ def classify_transcription_relevance(transcription):
 | Situation          | Priority   |
 | ------------------ | ---------- |
 | Casual talk        | 0.2        |
+| Emotional distress | 0.3        |
 | Clarification      | 0.4        |
 | Task instruction   | 0.8        |
 | Critical command   | 0.95       |
-| Emotional distress | 0.9        |
 
 
 Return Example JSON: {"intent": "create_goal", "confidence": 0-1, "priority": 0-1}
