@@ -1,5 +1,8 @@
 import json
+import re
 import ollama
+import io
+import sys
 
 from config.config import MODEL_NAME
  
@@ -20,5 +23,24 @@ def action(goal, reasoning):
             }}"""
         }]
     )
+
+
+    output = json.loads(response['message']['content'])
+
+    if output["type"]  == "code":
+        res = run_code(output["output"])
+        return "Code Result: " + res 
+    if output["output"] == "plain":
+        return output["output"]
     
-    return json.loads(response['message']['content'])
+    return 
+def run_code(code):
+    namespace = {}
+    buffer = io.StringIO()
+    sys.stdout = buffer
+
+    exec(code, namespace)
+
+    sys.stdout = sys.__stdout__
+
+    return buffer.getvalue()
