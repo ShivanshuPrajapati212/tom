@@ -1,1 +1,3 @@
-import subprocess; subprocess.run(['open', '-a', 'Finder'])
+print("Confirm with the user that they still want YouTube opened.")
+print("If the user confirms, execute the code to open YouTube in the default browser.")
+print("If the user does not confirm, politely ask the user to clarify their request.")

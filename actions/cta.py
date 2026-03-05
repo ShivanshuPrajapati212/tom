@@ -1,21 +1,21 @@
 import ollama
 import json
 
-from config.config import MODEL_NAME
-
 
 def get_cta(code, output, summary):
     response = ollama.chat(
-        model=MODEL_NAME,
+            model="gemma3:4b",
         format='json',
         messages=[{
             'role': 'user',
-            'content': """You have to create a CTA for the text to speech model by judging the ouput and the code, and tell if the task was completed or not.
+            'content': """You have to summary the output by judging the ouput and the code.
 
             Keep it short 3-5 Words.
             Respond in JSON like below.
+
+            Example:
             {
-                "cta": "opened youtube successfully",
+                "cta": "Eg: the current time is 8:30pm",
             }
             """
             }]
@@ -25,3 +25,5 @@ def get_cta(code, output, summary):
 
     return json.loads(response['message']['content'])
 
+if __name__ == "__main__":
+    get_cta("import subprocess; subprocess.run(['open', '-a', 'Finder'])", None, "User requested to Open finder")
