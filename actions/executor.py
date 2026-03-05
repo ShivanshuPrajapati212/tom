@@ -4,7 +4,10 @@ import ollama
 import io
 import sys
 
+from actions.cta import get_cta
 from config.config import MODEL_NAME
+from tts.speak import speakText
+from tts import speak
  
 
 def action(goal, reasoning):
@@ -29,8 +32,11 @@ def action(goal, reasoning):
 
     if output["type"]  == "code":
         res = run_code(output["output"])
+        cta = get_cta(output["output"], res, goal)
+        speakText(cta["cta"]) 
         return "Code Result: " + res 
     if output["output"] == "plain":
+        speakText(output["output"]) 
         return output["output"]
     
     return 
@@ -52,3 +58,4 @@ def run_code(code):
     except Exception as e:
         print("Error Running code: ", e)
         return ""
+
